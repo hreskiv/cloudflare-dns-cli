@@ -18,7 +18,7 @@ Manage your DNS records directly from the terminal on macOS/Linux.
 Clone or copy the script:
 
 ```bash
-git clone https://github.com/hreskiv/cf-dns-cli.git
+git clone https://github.com/hreskiv/cloudflare-dns-cli
 cd cf-dns-cli
 chmod +x cf-dns.py
 ```

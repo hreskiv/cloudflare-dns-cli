@@ -3,10 +3,17 @@
 Cloudflare DNS CLI (stdlib only)
 - zones / list / add / update / delete DNS records
 - token from env CF_API_TOKEN (default) or --token-file
-- update/delete ask for confirmation (skip with --yes)
+- add/update/delete ask for confirmation (skip with --yes)
 """
 
-import argparse, json, os, sys, urllib.request, urllib.parse
+import argparse
+import json
+import os
+import sys
+import urllib.parse
+import urllib.request
+
+__version__ = "1.2.0"
 
 API_BASE = "https://api.cloudflare.com/client/v4"
 
@@ -33,7 +40,7 @@ def headers(token):
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "User-Agent": "cf-dns-cli-stdlib/1.1",
+        "User-Agent": f"cf-dns-cli-stdlib/{__version__}",
     }
 
 def http_json(method, url, token, payload=None, params=None):
@@ -105,6 +112,8 @@ def find_record(token, zid, rid, name, rtype, zone_name, base=API_BASE):
     if not matches: die(f"No records match: type={rtype} name={fqdn}", 3)
     if len(matches) == 1:
         r = matches[0]; return r["id"], r
+    if not sys.stdin.isatty():
+        die(f"Multiple records match type={rtype} name={fqdn}. Use --id to specify.", 3)
     print("Multiple records found:\n")
     render_table(matches)
     choice = input("\nEnter record ID to proceed (blank to cancel): ").strip()
@@ -182,7 +191,8 @@ def main():
     ap = argparse.ArgumentParser(description="Cloudflare DNS CLI (stdlib only)", formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("--token-file", help="Read API token from file (first line). If omitted, uses CF_API_TOKEN.")
     ap.add_argument("--base-url", default=API_BASE, help="Override API base URL.")
-    ap.add_argument("--yes", action="store_true", help="Skip confirmation prompts for update/delete.")
+    ap.add_argument("--yes", action="store_true", help="Skip confirmation prompts for add/update/delete.")
+    ap.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("zones", help="List all zones")

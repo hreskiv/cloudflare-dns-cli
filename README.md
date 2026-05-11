@@ -13,6 +13,7 @@ Manage your DNS records directly from the terminal on macOS/Linux.
 
 - **Zones** -- list all zones accessible with your API token
 - **Records** -- list, filter, add, update, delete DNS records
+- **Composite types** -- MX (priority), SRV (priority/weight/port/target), CAA (flags/tag/value)
 - **Safe** -- confirmation prompts for destructive actions (`--yes` to skip)
 - **Simple output** -- human-friendly one-liners for add/update/delete
 - **No pip needed** -- uses only Python 3 standard library (`urllib.request`)
@@ -65,12 +66,12 @@ cf-dns.py
 
 ### Zones
 ```bash
-cf-dns.py zones | column -t
+cf-dns.py zones | column -t -s$'\t'
 ```
 
 ### List records
 ```bash
-cf-dns.py list example.com | column -t
+cf-dns.py list example.com | column -t -s$'\t'
 cf-dns.py list example.com --type TXT
 cf-dns.py list example.com --name-substr _acme
 ```
@@ -91,6 +92,28 @@ Record www.example.com (A) updated: 203.0.113.10 -> 203.0.113.20
 cf-dns.py delete example.com --name www --type A
 Output:
 Record www.example.com (A) deleted: 203.0.113.20
+```
+
+### MX record (with priority)
+```bash
+cf-dns.py add example.com --name @ --type MX --content mail.example.com --priority 10
+cf-dns.py update example.com --name @ --type MX --priority 20
+```
+
+### SRV record
+```bash
+cf-dns.py add example.com --name _sip._tcp --type SRV \
+  --priority 10 --weight 5 --port 5060 --target sip.example.com
+```
+Name must be `_service._proto.host` (e.g. `_sip._tcp` resolved against the zone, or fully qualified).
+
+### CAA record
+```bash
+cf-dns.py add example.com --name @ --type CAA \
+  --caa-tag issue --caa-value "letsencrypt.org"
+# Optional flags (default 0). Use 128 for critical:
+cf-dns.py add example.com --name @ --type CAA \
+  --caa-flags 128 --caa-tag iodef --caa-value "mailto:security@example.com"
 ```
 
 ## Notes
